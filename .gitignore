@@ -1,0 +1,14 @@
+.vscode
+
+moosik_kontrol/__pycache__
+
+api/__pycache__
+api/migrations
+
+frontend/__pycache__
+frontend/node_modules
+frontend/yarn.lock
+frontend/static/frontend/main.js
+frontend/static/frontend/main.js.LICENSE.txt
+frontend/package-lock.json
+frontend/migrations
