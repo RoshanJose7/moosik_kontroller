@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import {
   Button,
   Grid,
@@ -13,6 +13,7 @@ import {
 } from "@material-ui/core";
 
 function CreateRoomPage() {
+  const history = useHistory();
   const [guestCanPause, setGuestCanPause] = useState(true);
   const [votesToSkip, setVotesToSkip] = useState(2);
 
@@ -36,7 +37,7 @@ function CreateRoomPage() {
 
     await fetch("/api/room/create/", requestOptions)
       .then((res) => res.json())
-      .then((data) => console.log(data))
+      .then((data) => history.push("/room/" + data.code))
       .catch((e) => console.error(e));
   }
 
