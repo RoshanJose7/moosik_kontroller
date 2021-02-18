@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useHistory } from "react-router-dom";
+import { Alert } from "@material-ui/lab";
 import {
   Button,
   Grid,
+  Collapse,
   Typography,
   TextField,
   FormHelperText,
@@ -12,10 +14,27 @@ import {
   FormControlLabel,
 } from "@material-ui/core";
 
-function CreateRoomPage() {
+const defaultProps = {
+  votesToSkip: 2,
+  guestCanPause: true,
+  update: false,
+  roomCode: null,
+  updateCallback: () => {},
+};
+
+function CreateRoomPage(props = defaultProps) {
   const history = useHistory();
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [guestCanPause, setGuestCanPause] = useState(true);
   const [votesToSkip, setVotesToSkip] = useState(2);
+
+  useEffect(() => {
+    if (props.update) {
+      setGuestCanPause(props.guestCanPause);
+      setVotesToSkip(props.votesToSkip);
+    }
+  }, []);
 
   function handleVotesChange(e) {
     setVotesToSkip(e.target.value);
@@ -37,8 +56,63 @@ function CreateRoomPage() {
 
     await fetch("/api/room/create/", requestOptions)
       .then((res) => res.json())
-      .then((data) => history.push("/room/" + data.code))
+      .then((data) => {
+        history.push("/room/" + data.code);
+      })
       .catch((e) => console.error(e));
+  }
+
+  async function handleUpdateRoom() {
+    const requestOptions = {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        guest_can_pause: guestCanPause,
+        votes_to_skip: votesToSkip,
+        code: props.roomCode,
+      }),
+    };
+
+    await fetch("/api/update-room/", requestOptions)
+      .then((res) => {
+        if (res.ok) {
+          setSuccess("Room Updated!!!");
+        } else {
+          setError("Error Updating Room!!!");
+        }
+
+        props.updateCallback();
+      })
+      .catch((e) => console.error(e));
+  }
+
+  function RenderCreateButtons() {
+    return (
+      <Grid item>
+        <Button color="primary" variant="contained" onClick={handleCreateRoom}>
+          Create a Room
+        </Button>
+        <Button
+          style={{ marginLeft: "10px" }}
+          color="secondary"
+          variant="contained"
+          to="/"
+          component={Link}
+        >
+          Back
+        </Button>
+      </Grid>
+    );
+  }
+
+  function RenderUpdateButtons() {
+    return (
+      <Grid item>
+        <Button color="primary" variant="contained" onClick={handleUpdateRoom}>
+          Update Room
+        </Button>
+      </Grid>
+    );
   }
 
   return (
@@ -50,8 +124,31 @@ function CreateRoomPage() {
       alignItems="center"
     >
       <Grid item>
+        <Collapse in={error || success}>
+          {success ? (
+            <Alert
+              severity="success"
+              onClose={() => {
+                setSuccess(null);
+              }}
+            >
+              {success}
+            </Alert>
+          ) : (
+            <Alert
+              severity="error"
+              onClose={() => {
+                setError(null);
+              }}
+            >
+              {error}
+            </Alert>
+          )}
+        </Collapse>
+      </Grid>
+      <Grid item>
         <Typography component="h4" variant="h4">
-          Create A Room
+          {props.update ? "Update Room" : "Create A Room"}
         </Typography>
       </Grid>
       <Grid item>
@@ -61,7 +158,7 @@ function CreateRoomPage() {
           </FormHelperText>
           <RadioGroup
             row
-            defaultValue="true"
+            defaultValue={guestCanPause.toString()}
             onChange={handleGuestCanPauseChange}
           >
             <FormControlLabel
@@ -95,20 +192,7 @@ function CreateRoomPage() {
         </FormControl>
       </Grid>
 
-      <Grid item>
-        <Button color="primary" variant="contained" onClick={handleCreateRoom}>
-          Create a Room
-        </Button>
-        <Button
-          style={{ marginLeft: "10px" }}
-          color="secondary"
-          variant="contained"
-          to="/"
-          component={Link}
-        >
-          Back
-        </Button>
-      </Grid>
+      {props.update ? <RenderUpdateButtons /> : <RenderCreateButtons />}
     </Grid>
   );
 }
