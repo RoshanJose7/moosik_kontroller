@@ -169,7 +169,6 @@ function Room({ match }) {
           Code : {roomDetails.roomCode}
         </Typography>
       </Grid>
-      {console.log(roomDetails.song)}
       <MusicPlayer {...roomDetails.song} />
       {roomDetails.is_host ? <RenderSettingsButton /> : null}
       <Grid item>
